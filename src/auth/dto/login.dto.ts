@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const CreateUserSchema = z
+export const LoginDtoSchema = z
   .object({
     email: z
       .string()
@@ -9,13 +9,7 @@ export const CreateUserSchema = z
       .string()
       .min(8, { message: 'A senha deve ter no mínimo 8 caracteres.' })
       .max(128, { message: 'A senha deve ter no máximo 128 caracteres.' }),
-    username: z
-      .string()
-      .min(3, { message: 'O nome de usuário deve ter no mínimo 3 caracteres.' })
-      .max(50, {
-        message: 'O nome de usuário deve ter no máximo 50 caracteres.',
-      }),
   })
   .strict();
 
-export type CreateUserDto = z.infer<typeof CreateUserSchema>;
+export type LoginDto = z.infer<typeof LoginDtoSchema>;
