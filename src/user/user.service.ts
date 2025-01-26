@@ -1,14 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/database/prisma.service';
+import { HashingService } from 'src/auth/hashing/hashing.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private readonly hashingService: HashingService,
+  ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return createUserDto;
+  async create(createUserDto: CreateUserDto) {
+    const passwordHash = await this.hashingService.hash(createUserDto.password);
+    try {
+      const userData = {
+        username: createUserDto.username,
+        email: createUserDto.email,
+        passwordHash,
+      };
+      const newUser = await this.prisma.user.create({
+        data: userData,
+      });
+      return newUser;
+    } catch (error) {
+      if (error.code === 'P2002') {
+        throw new ConflictException('E-mail já cadastrado.');
+      }
+
+      throw error;
+    }
   }
 
   findAll() {
