@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -7,6 +8,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/database/prisma.service';
 import { HashingService } from 'src/auth/hashing/hashing.service';
+import { TokenPayloadDto } from 'src/auth/dto/token-payload.dto';
 
 @Injectable()
 export class UserService {
@@ -53,8 +55,32 @@ export class UserService {
     return user;
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${updateUserDto} user`;
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    tokenPayload: TokenPayloadDto,
+  ) {
+    if (id !== tokenPayload.sub) {
+      throw new ForbiddenException('Você não pode atualizar outra pessoa');
+    }
+    const user = await this.findOne(id);
+
+    const userData = {
+      username: updateUserDto?.username,
+    };
+    if (updateUserDto?.password) {
+      const passwordHash = await this.hashingService.hash(
+        updateUserDto.password,
+      );
+      userData['passwordHash'] = passwordHash;
+    }
+    const updateUser = await this.prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: userData,
+    });
+    return updateUser;
   }
 
   remove(id: string) {

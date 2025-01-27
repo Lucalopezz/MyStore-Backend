@@ -6,6 +6,7 @@ import { BcryptService } from './hashing/bycript.service';
 import jwtConfig from './config/jwt.config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { PrismaService } from 'src/database/prisma.service';
 
 @Global()
 @Module({
@@ -15,6 +16,7 @@ import { AuthService } from './auth.service';
       useClass: BcryptService,
     },
     AuthService,
+    PrismaService,
   ],
   exports: [HashingService, JwtModule, ConfigModule],
   controllers: [AuthController],

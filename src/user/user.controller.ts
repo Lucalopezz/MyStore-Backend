@@ -6,11 +6,15 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, CreateUserSchema } from './dto/create-user.dto';
 import { UpdateUserDto, UpdateUserSchema } from './dto/update-user.dto';
 import { ZodValidationPipe } from 'src/pipes/zod-validator.pipe';
+import { TokenPayloadDto } from 'src/auth/dto/token-payload.dto';
+import { TokenPayloadParam } from 'src/auth/params/token-payload.param';
+import { AuthTokenGuard } from 'src/auth/guards/auth-token.guard';
 
 @Controller('user')
 export class UserController {
@@ -34,11 +38,13 @@ export class UserController {
   }
 
   @Patch(':id')
+  @UseGuards(AuthTokenGuard)
   update(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(UpdateUserSchema)) updateUserDto: UpdateUserDto,
+    @TokenPayloadParam() tokenPayload: TokenPayloadDto,
   ) {
-    return this.userService.update(id, updateUserDto);
+    return this.userService.update(id, updateUserDto, tokenPayload);
   }
 
   @Delete(':id')
