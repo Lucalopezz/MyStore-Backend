@@ -83,7 +83,12 @@ export class UserService {
     return updateUser;
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} user`;
+  async remove(id: string, tokenPayload: TokenPayloadDto) {
+    if (id !== tokenPayload.sub) {
+      throw new ForbiddenException('Você não pode deletar outra pessoa');
+    }
+    const user = await this.findOne(id);
+
+    return await this.prisma.user.delete({ where: { id: user.id } });
   }
 }
