@@ -15,6 +15,8 @@ import { ZodValidationPipe } from 'src/pipes/zod-validator.pipe';
 import { TokenPayloadDto } from 'src/auth/dto/token-payload.dto';
 import { TokenPayloadParam } from 'src/auth/params/token-payload.param';
 import { AuthTokenGuard } from 'src/auth/guards/auth-token.guard';
+import { Roles } from 'src/auth/decorator/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('user')
 export class UserController {
@@ -48,11 +50,9 @@ export class UserController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthTokenGuard)
-  remove(
-    @Param('id') id: string,
-    @TokenPayloadParam() tokenPayload: TokenPayloadDto,
-  ) {
-    return this.userService.remove(id, tokenPayload);
+  @UseGuards(AuthTokenGuard, RolesGuard)
+  @Roles('ADMIN')
+  remove(@Param('id') id: string) {
+    return this.userService.remove(id);
   }
 }

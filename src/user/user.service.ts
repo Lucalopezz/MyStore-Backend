@@ -42,7 +42,12 @@ export class UserService {
     const users = await this.prisma.user.findMany({
       orderBy: { createdAt: 'desc' },
     });
-    return users;
+    const usersWithoutPass = users.map(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      ({ passwordHash, ...userWithoutPass }) => userWithoutPass,
+    );
+
+    return usersWithoutPass;
   }
 
   async findOne(id: string) {
@@ -83,10 +88,7 @@ export class UserService {
     return updateUser;
   }
 
-  async remove(id: string, tokenPayload: TokenPayloadDto) {
-    if (id !== tokenPayload.sub) {
-      throw new ForbiddenException('Você não pode deletar outra pessoa');
-    }
+  async remove(id: string) {
     const user = await this.findOne(id);
 
     return await this.prisma.user.delete({ where: { id: user.id } });
