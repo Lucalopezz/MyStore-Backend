@@ -14,12 +14,82 @@ datasource db {
 }
 
 model User {
-  id           String      @id @default(uuid())
-  email        String   @unique
+  id           String    @id @default(uuid())
+  email        String    @unique
   passwordHash String
   username     String
-  createdAt    DateTime? @default(now())
-  updatedAt    DateTime? @updatedAt
-  active       Boolean  @default(true)
+  role         Role      @default(USER)  
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  active       Boolean   @default(true)
   picture      String?
+  orders       Order[]
+  carts        Cart[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Product {
+  id          Int            @id @default(autoincrement())
+  name        String
+  description String?
+  price       Decimal        @db.Decimal(10, 2)
+  quantity    Int
+  images      String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  carts       CartProduct[]
+  orders      ProductOrder[]
+}
+
+model Cart {
+  id        Int           @id @default(autoincrement())
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  products  CartProduct[]
+
+  @@index([userId])
+}
+
+model CartProduct {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  cartId    Int
+  productId Int
+  cart      Cart     @relation(fields: [cartId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+  @@index([productId])
+  @@index([cartId])
+}
+
+model Order {
+  id        Int            @id @default(autoincrement())
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  status    String        @default("processando")
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  products  ProductOrder[]
+
+  @@index([userId])
+}
+
+model ProductOrder {
+  id        Int      @id @default(autoincrement())
+  quantity  Int
+  orderId   Int
+  productId Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@unique([orderId, productId])
+  @@index([productId])
+  @@index([orderId])
 }
