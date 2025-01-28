@@ -36,7 +36,7 @@ export class AuthService {
     const accessToken = await this.signJwtAsync<Partial<User>>(
       user.id,
       this.jwtConfiguration.jwtTtl,
-      { email: user.email },
+      { email: user.email, role: user.role },
     );
 
     return {
