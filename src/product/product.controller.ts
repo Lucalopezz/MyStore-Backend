@@ -9,12 +9,19 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import {
+  CreateProductDto,
+  CreateProductSchema,
+} from './dto/create-product.dto';
+import {
+  UpdateProductDto,
+  UpdateProductrSchema,
+} from './dto/update-product.dto';
 import { AuthTokenGuard } from 'src/auth/guards/auth-token.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorator/roles.decorator';
 import { REQUEST_ADM } from 'src/auth/auth.constants';
+import { ZodValidationPipe } from 'src/pipes/zod-validator.pipe';
 
 @Controller('product')
 export class ProductController {
@@ -23,7 +30,10 @@ export class ProductController {
   @Post()
   @UseGuards(AuthTokenGuard, RolesGuard)
   @Roles(REQUEST_ADM)
-  create(@Body() createProductDto: CreateProductDto) {
+  create(
+    @Body(new ZodValidationPipe(CreateProductSchema))
+    createProductDto: CreateProductDto,
+  ) {
     return this.productService.create(createProductDto);
   }
 
@@ -40,7 +50,11 @@ export class ProductController {
   @Patch(':id')
   @UseGuards(AuthTokenGuard, RolesGuard)
   @Roles(REQUEST_ADM)
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+  update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(UpdateProductrSchema))
+    updateProductDto: UpdateProductDto,
+  ) {
     return this.productService.update(+id, updateProductDto);
   }
 

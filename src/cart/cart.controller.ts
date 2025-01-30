@@ -10,7 +10,8 @@ import {
 import { CartService } from './cart.service';
 import { AuthTokenGuard } from 'src/auth/guards/auth-token.guard';
 import { User } from 'src/common/decorators/get-userId-from-token.decorator';
-import { addProductDto } from './dto/add-product.dto';
+import { addProductDto, addProductSchema } from './dto/add-product.dto';
+import { ZodValidationPipe } from 'src/pipes/zod-validator.pipe';
 
 @Controller('cart')
 @UseGuards(AuthTokenGuard)
@@ -25,7 +26,7 @@ export class CartController {
   @Post('products')
   addProduct(
     @User('sub') userId: string,
-    @Body() addProductDto: addProductDto,
+    @Body(new ZodValidationPipe(addProductSchema)) addProductDto: addProductDto,
   ) {
     return this.cartService.addProduct(userId, addProductDto);
   }
