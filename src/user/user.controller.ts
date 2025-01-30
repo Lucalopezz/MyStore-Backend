@@ -17,6 +17,7 @@ import { TokenPayloadParam } from 'src/auth/params/token-payload.param';
 import { AuthTokenGuard } from 'src/auth/guards/auth-token.guard';
 import { Roles } from 'src/auth/decorator/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { REQUEST_ADM } from 'src/auth/auth.constants';
 
 @Controller('user')
 export class UserController {
@@ -51,7 +52,7 @@ export class UserController {
 
   @Delete(':id')
   @UseGuards(AuthTokenGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles(REQUEST_ADM)
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
   }
