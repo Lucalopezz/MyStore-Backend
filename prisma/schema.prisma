@@ -61,7 +61,7 @@ model CartProduct {
   quantity  Int
   cartId    Int
   productId Int
-  cart      Cart     @relation(fields: [cartId], references: [id])
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id])
 
   @@unique([cartId, productId])
