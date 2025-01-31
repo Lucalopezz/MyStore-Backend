@@ -33,7 +33,7 @@ export class CartController {
 
   @Delete('products/:productId')
   removeProduct(
-    @User('id') userId: string,
+    @User('sub') userId: string,
     @Param('productId') productId: string,
   ) {
     return this.cartService.removeProduct(userId, +productId);
