@@ -12,3 +12,5 @@ export type OrderStatus = z.infer<typeof OrderStatus>;
 export const UpdateOrderSchema = z.object({
   status: OrderStatus,
 });
+
+export type UpdateOrderDto = z.infer<typeof UpdateOrderSchema>;
