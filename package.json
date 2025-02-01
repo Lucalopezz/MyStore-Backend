@@ -30,10 +30,12 @@
     "@prisma/client": "^6.2.1",
     "bcryptjs": "^2.4.3",
     "helmet": "^8.0.0",
+    "nest-winston": "^1.10.2",
     "nodemailer": "^6.10.0",
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "winston": "^3.17.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
