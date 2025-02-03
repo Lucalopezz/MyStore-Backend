@@ -13,6 +13,7 @@ const logFormat = winston.format.combine(
 );
 
 export const winstonConfig = {
+  exitOnError: false,
   transports: [
     new winston.transports.Console({
       format: winston.format.simple(),
