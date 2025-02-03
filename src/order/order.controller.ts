@@ -16,6 +16,7 @@ import { UpdateOrderDto, UpdateOrderSchema } from './dto/update-order.dto';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { REQUEST_ADM } from 'src/auth/auth.constants';
 import { Roles } from 'src/auth/decorator/roles.decorator';
+import { ApiCreatedResponse } from '@nestjs/swagger';
 
 @Controller('order')
 @UseGuards(AuthTokenGuard)
@@ -23,6 +24,7 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Post()
+  @ApiCreatedResponse({ type: CreateOrderDto })
   create(
     @Body(new ZodValidationPipe(CreateOrderSchema))
     createOrderDto: CreateOrderDto,
@@ -44,6 +46,7 @@ export class OrderController {
   @Patch(':id/status')
   @UseGuards(AuthTokenGuard, RolesGuard)
   @Roles(REQUEST_ADM)
+  @ApiCreatedResponse({ type: UpdateOrderDto })
   updateStatus(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(UpdateOrderSchema))

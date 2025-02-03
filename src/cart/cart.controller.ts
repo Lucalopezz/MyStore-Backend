@@ -12,6 +12,7 @@ import { AuthTokenGuard } from 'src/auth/guards/auth-token.guard';
 import { User } from 'src/common/decorators/get-userId-from-token.decorator';
 import { addProductDto, addProductSchema } from './dto/add-product.dto';
 import { ZodValidationPipe } from 'src/pipes/zod-validator.pipe';
+import { ApiCreatedResponse } from '@nestjs/swagger';
 
 @Controller('cart')
 @UseGuards(AuthTokenGuard)
@@ -24,6 +25,7 @@ export class CartController {
   }
 
   @Post('products')
+  @ApiCreatedResponse({ type: addProductDto })
   addProduct(
     @User('sub') userId: string,
     @Body(new ZodValidationPipe(addProductSchema)) addProductDto: addProductDto,

@@ -18,12 +18,14 @@ import { AuthTokenGuard } from 'src/auth/guards/auth-token.guard';
 import { Roles } from 'src/auth/decorator/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { REQUEST_ADM } from 'src/auth/auth.constants';
+import { ApiCreatedResponse } from '@nestjs/swagger';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
+  @ApiCreatedResponse({ type: CreateUserDto })
   create(
     @Body(new ZodValidationPipe(CreateUserSchema)) createUserDto: CreateUserDto,
   ) {
@@ -42,6 +44,7 @@ export class UserController {
 
   @Patch(':id')
   @UseGuards(AuthTokenGuard)
+  @ApiCreatedResponse({ type: UpdateUserDto })
   update(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(UpdateUserSchema)) updateUserDto: UpdateUserDto,

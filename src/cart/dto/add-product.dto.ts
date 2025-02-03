@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ApiProperty } from '@nestjs/swagger';
 
 export const addProductSchema = z
   .object({
@@ -7,4 +8,21 @@ export const addProductSchema = z
   })
   .strict();
 
-export type addProductDto = z.infer<typeof addProductSchema>;
+export class addProductDto {
+  @ApiProperty({
+    example: 123,
+    description: 'ID do produto',
+    type: 'number',
+  })
+  productId: number;
+
+  @ApiProperty({
+    example: 2,
+    description: 'Quantidade de produtos',
+    type: 'number',
+    minimum: 1,
+  })
+  quantity: number;
+}
+
+export type AddProductType = z.infer<typeof addProductSchema>;

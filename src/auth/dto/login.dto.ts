@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ApiProperty } from '@nestjs/swagger';
 
 export const LoginDtoSchema = z
   .object({
@@ -12,4 +13,22 @@ export const LoginDtoSchema = z
   })
   .strict();
 
-export type LoginDto = z.infer<typeof LoginDtoSchema>;
+export class LoginDto {
+  @ApiProperty({
+    example: 'usuario@email.com',
+    description: 'Endereço de email do usuário',
+    type: 'string',
+  })
+  email: string;
+
+  @ApiProperty({
+    example: 'senhaSegura123',
+    description: 'Senha do usuário',
+    type: 'string',
+    minLength: 8,
+    maxLength: 128,
+  })
+  password: string;
+}
+
+export type LoginType = z.infer<typeof LoginDtoSchema>;
