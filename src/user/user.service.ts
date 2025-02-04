@@ -3,12 +3,15 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/database/prisma.service';
 import { HashingService } from 'src/auth/hashing/hashing.service';
 import { TokenPayloadDto } from 'src/auth/dto/token-payload.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -18,46 +21,95 @@ export class UserService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const passwordHash = await this.hashingService.hash(createUserDto.password);
     try {
+      const passwordHash = await this.hashingService.hash(
+        createUserDto.password,
+      );
+
       const userData = {
         username: createUserDto.username,
         email: createUserDto.email,
         passwordHash,
       };
+
       const newUser = await this.prisma.user.create({
         data: userData,
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          createdAt: true,
+        },
       });
-      return newUser;
-    } catch (error) {
-      if (error.code === 'P2002') {
-        throw new ConflictException('E-mail já cadastrado.');
-      }
 
-      throw error;
+      return {
+        message: 'Usuário criado com sucesso',
+        user: newUser,
+      };
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ConflictException('E-mail já cadastrado');
+        }
+      }
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      console.error('Create User Error:', error);
+      throw new InternalServerErrorException('Erro ao criar usuário');
     }
   }
 
   async findAll() {
-    const users = await this.prisma.user.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-    const usersWithoutPass = users.map(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      ({ passwordHash, ...userWithoutPass }) => userWithoutPass,
-    );
+    try {
+      const users = await this.prisma.user.findMany({
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          createdAt: true,
+        },
+      });
 
-    return usersWithoutPass;
+      return {
+        message: 'Usuários recuperados com sucesso',
+        users,
+        total: users.length,
+      };
+    } catch (error) {
+      console.error('Find All Users Error:', error);
+      throw new InternalServerErrorException('Erro ao buscar usuários');
+    }
   }
 
   async findOne(id: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: id } });
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          createdAt: true,
+        },
+      });
 
-    if (!user) {
-      throw new NotFoundException('Usuário não encontrado!');
+      if (!user) {
+        throw new NotFoundException('Usuário não encontrado');
+      }
+
+      return {
+        message: 'Usuário recuperado com sucesso',
+        user,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Find One User Error:', error);
+      throw new InternalServerErrorException('Erro ao buscar usuário');
     }
-
-    return user;
   }
 
   async update(
@@ -65,32 +117,74 @@ export class UserService {
     updateUserDto: UpdateUserDto,
     tokenPayload: TokenPayloadDto,
   ) {
-    if (id !== tokenPayload.sub) {
-      throw new ForbiddenException('Você não pode atualizar outra pessoa');
-    }
-    const user = await this.findOne(id);
+    try {
+      if (id !== tokenPayload.sub) {
+        throw new ForbiddenException('Você não pode atualizar outra pessoa');
+      }
 
-    const userData = {
-      username: updateUserDto?.username,
-    };
-    if (updateUserDto?.password) {
-      const passwordHash = await this.hashingService.hash(
-        updateUserDto.password,
-      );
-      userData['passwordHash'] = passwordHash;
+      await this.findOne(id);
+
+      const userData: { username?: string; passwordHash?: string } = {};
+
+      if (updateUserDto?.username) {
+        userData.username = updateUserDto.username;
+      }
+
+      if (updateUserDto?.password) {
+        userData.passwordHash = await this.hashingService.hash(
+          updateUserDto.password,
+        );
+      }
+
+      const updatedUser = await this.prisma.user.update({
+        where: { id },
+        data: userData,
+        select: {
+          id: true,
+          username: true,
+          email: true,
+        },
+      });
+
+      return {
+        message: 'Usuário atualizado com sucesso',
+        user: updatedUser,
+      };
+    } catch (error) {
+      if (
+        error instanceof ForbiddenException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      console.error('Update User Error:', error);
+      throw new InternalServerErrorException('Erro ao atualizar usuário');
     }
-    const updateUser = await this.prisma.user.update({
-      where: {
-        id: user.id,
-      },
-      data: userData,
-    });
-    return updateUser;
   }
 
   async remove(id: string) {
-    const user = await this.findOne(id);
+    try {
+      await this.findOne(id);
 
-    return await this.prisma.user.delete({ where: { id: user.id } });
+      const deletedUser = await this.prisma.user.delete({
+        where: { id },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+        },
+      });
+
+      return {
+        message: 'Usuário removido com sucesso',
+        user: deletedUser,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Remove User Error:', error);
+      throw new InternalServerErrorException('Erro ao remover usuário');
+    }
   }
 }

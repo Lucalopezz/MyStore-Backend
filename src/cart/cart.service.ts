@@ -2,9 +2,12 @@ import {
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
+  InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
 import { addProductDto } from './dto/add-product.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CartService {
@@ -12,7 +15,7 @@ export class CartService {
 
   async getCart(userId: string) {
     try {
-      const cart = await this.prisma.cart.findFirst({
+      let cart = await this.prisma.cart.findFirst({
         where: { userId },
         include: {
           products: {
@@ -24,10 +27,8 @@ export class CartService {
       });
 
       if (!cart) {
-        return this.prisma.cart.create({
-          data: {
-            userId,
-          },
+        cart = await this.prisma.cart.create({
+          data: { userId },
           include: {
             products: {
               include: {
@@ -38,11 +39,14 @@ export class CartService {
         });
       }
 
-      return cart;
+      return {
+        message: 'Carrinho recuperado com sucesso',
+        cart,
+      };
     } catch (error) {
-      console.log(error);
+      console.error('Get Cart Error:', error);
       throw new ServiceUnavailableException(
-        'Serviço temporariamente indisponível.',
+        'Serviço temporariamente indisponível',
       );
     }
   }
@@ -51,25 +55,29 @@ export class CartService {
     try {
       const { productId, quantity } = addProductDto;
 
+      if (quantity <= 0) {
+        throw new BadRequestException('Quantidade inválida');
+      }
+
       const product = await this.prisma.product.findUnique({
         where: { id: productId },
       });
 
       if (!product) {
-        throw new NotFoundException(`Produto nâo encontrado`);
+        throw new NotFoundException('Produto não encontrado');
+      }
+
+      if (product.quantity < quantity) {
+        throw new BadRequestException('Quantidade em estoque insuficiente');
       }
 
       const cart = await this.prisma.cart.upsert({
-        where: {
-          userId,
-        },
-        create: {
-          userId,
-        },
+        where: { userId },
+        create: { userId },
         update: {},
       });
 
-      await this.prisma.cartProduct.upsert({
+      const cartProduct = await this.prisma.cartProduct.upsert({
         where: {
           cartId_productId: {
             cartId: cart.id,
@@ -85,33 +93,74 @@ export class CartService {
           quantity,
         },
       });
-      return { message: 'Produto adicionado com sucesso!' };
+
+      return {
+        message: 'Produto adicionado com sucesso',
+        cartProduct,
+      };
     } catch (error) {
-      console.log(error);
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        console.error('Prisma Error:', error);
+        throw new InternalServerErrorException(
+          'Erro ao adicionar produto ao carrinho',
+        );
+      }
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      console.error('Unexpected Error:', error);
       throw new ServiceUnavailableException(
-        'Serviço temporariamente indisponível.',
+        'Serviço temporariamente indisponível',
       );
     }
   }
 
   async removeProduct(userId: string, productId: number) {
     try {
-      const cart = await this.getCart(userId);
+      const cart = await this.prisma.cart.findFirst({
+        where: { userId },
+      });
 
-      await this.prisma.cartProduct.delete({
+      if (!cart) {
+        throw new NotFoundException('Carrinho não encontrado');
+      }
+
+      const deletedProduct = await this.prisma.cartProduct.delete({
         where: {
           cartId_productId: {
             cartId: cart.id,
             productId,
           },
         },
+        include: {
+          product: true,
+        },
       });
-      return { message: 'Produto removido com sucesso!' };
+
+      return {
+        message: 'Produto removido com sucesso',
+        deletedProduct,
+      };
     } catch (error) {
-      if (error.code === 'P2025') {
-        throw new NotFoundException('Carrinho não existe');
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException('Produto não encontrado no carrinho');
+        }
+        console.error('Prisma Error:', error);
+        throw new InternalServerErrorException(
+          'Erro ao remover produto do carrinho',
+        );
       }
-      throw new Error(error);
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Unexpected Error:', error);
+      throw new ServiceUnavailableException(
+        'Serviço temporariamente indisponível',
+      );
     }
   }
 }
