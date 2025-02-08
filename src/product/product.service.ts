@@ -33,14 +33,33 @@ export class ProductService {
     }
   }
 
-  async findAll() {
+  async findAll(page, limit) {
     try {
-      const products = await this.prisma.product.findMany();
+      const skip = (page - 1) * limit;
+
+      const [products, total] = await Promise.all([
+        this.prisma.product.findMany({
+          skip,
+          take: limit,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        }),
+        this.prisma.product.count(),
+      ]);
+
+      const totalPages = Math.ceil(total / limit);
 
       return {
-        message: 'Produtos recuperados com sucesso',
         products,
-        total: products.length,
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
       };
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
@@ -59,7 +78,6 @@ export class ProductService {
       }
 
       return {
-        message: 'Produto recuperado com sucesso',
         product,
       };
     } catch (error) {
