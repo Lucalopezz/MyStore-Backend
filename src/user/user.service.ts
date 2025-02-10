@@ -83,7 +83,37 @@ export class UserService {
     }
   }
 
-  async findOne(id: string) {
+  async findOneByToken(id: string, userId: string) {
+    if (userId !== id) {
+      return { message: 'Erro! esse Id não é seu' };
+    }
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          createdAt: true,
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException('Usuário não encontrado');
+      }
+
+      return {
+        user,
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      console.error('Find One User Error:', error);
+      throw new InternalServerErrorException('Erro ao buscar usuário');
+    }
+  }
+  async findOneById(id: string) {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id },
@@ -122,7 +152,7 @@ export class UserService {
         throw new ForbiddenException('Você não pode atualizar outra pessoa');
       }
 
-      await this.findOne(id);
+      await this.findOneById(id);
 
       const userData: { username?: string; passwordHash?: string } = {};
 
@@ -164,7 +194,7 @@ export class UserService {
 
   async remove(id: string) {
     try {
-      await this.findOne(id);
+      await this.findOneById(id);
 
       const deletedUser = await this.prisma.user.delete({
         where: { id },

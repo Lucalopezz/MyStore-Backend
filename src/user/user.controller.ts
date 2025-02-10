@@ -19,6 +19,7 @@ import { Roles } from 'src/auth/decorator/roles.decorator';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { REQUEST_ADM } from 'src/auth/auth.constants';
 import { ApiCreatedResponse } from '@nestjs/swagger';
+import { User } from 'src/common/decorators/get-userId-from-token.decorator';
 
 @Controller('user')
 export class UserController {
@@ -38,8 +39,9 @@ export class UserController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(id);
+  @UseGuards(AuthTokenGuard)
+  findOne(@Param('id') id: string, @User('sub') userId: string) {
+    return this.userService.findOneByToken(id, userId);
   }
 
   @Patch(':id')
