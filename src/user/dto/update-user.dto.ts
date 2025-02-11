@@ -1,27 +1,30 @@
 import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
-import { CreateUserSchema } from './create-user.dto';
 
-export const UpdateUserSchema = CreateUserSchema.partial();
+export const UpdateUserSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, { message: 'A senha deve ter no mínimo 8 caracteres.' })
+      .max(128, { message: 'A senha deve ter no máximo 128 caracteres.' }),
+    username: z
+      .string()
+      .min(3, { message: 'O nome de usuário deve ter no mínimo 3 caracteres.' })
+      .max(50, {
+        message: 'O nome de usuário deve ter no máximo 50 caracteres.',
+      }),
+  })
+  .strict();
 
 export class UpdateUserDto {
-  @ApiProperty({
-    example: 'usuario@email.com',
-    description: 'Endereço de email do usuário',
-    type: 'string',
-    required: false,
-  })
-  email?: string;
-
   @ApiProperty({
     example: 'senhaSegura123',
     description: 'Senha do usuário',
     type: 'string',
     minLength: 8,
     maxLength: 128,
-    required: false,
   })
-  password?: string;
+  password: string;
 
   @ApiProperty({
     example: 'nomeusuario',
@@ -29,9 +32,8 @@ export class UpdateUserDto {
     type: 'string',
     minLength: 3,
     maxLength: 50,
-    required: false,
   })
-  username?: string;
+  username: string;
 }
 
 export type UpdateUserType = z.infer<typeof UpdateUserSchema>;
