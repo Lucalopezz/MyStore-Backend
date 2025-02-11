@@ -38,10 +38,10 @@ export class UserController {
     return this.userService.findAll();
   }
 
-  @Get(':id')
+  @Get('/get-one')
   @UseGuards(AuthTokenGuard)
-  findOne(@Param('id') id: string, @User('sub') userId: string) {
-    return this.userService.findOneByToken(id, userId);
+  findOne(@User('sub') userId: string) {
+    return this.userService.findOneByToken(userId);
   }
 
   @Patch(':id')

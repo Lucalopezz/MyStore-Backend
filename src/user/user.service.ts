@@ -83,10 +83,7 @@ export class UserService {
     }
   }
 
-  async findOneByToken(id: string, userId: string) {
-    if (userId !== id) {
-      return { message: 'Erro! esse Id não é seu' };
-    }
+  async findOneByToken(id: string) {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id },
