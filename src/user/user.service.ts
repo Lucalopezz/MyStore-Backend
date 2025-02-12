@@ -12,6 +12,8 @@ import { PrismaService } from 'src/database/prisma.service';
 import { HashingService } from 'src/auth/hashing/hashing.service';
 import { TokenPayloadDto } from 'src/auth/dto/token-payload.dto';
 import { Prisma } from '@prisma/client';
+import * as path from 'path';
+import * as fs from 'fs/promises';
 
 @Injectable()
 export class UserService {
@@ -83,33 +85,6 @@ export class UserService {
     }
   }
 
-  async findOneByToken(id: string) {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id },
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          createdAt: true,
-        },
-      });
-
-      if (!user) {
-        throw new NotFoundException('Usuário não encontrado');
-      }
-
-      return {
-        user,
-      };
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      console.error('Find One User Error:', error);
-      throw new InternalServerErrorException('Erro ao buscar usuário');
-    }
-  }
   async findOneById(id: string) {
     try {
       const user = await this.prisma.user.findUnique({
@@ -119,6 +94,7 @@ export class UserService {
           username: true,
           email: true,
           createdAt: true,
+          picture: true,
         },
       });
 
@@ -126,10 +102,7 @@ export class UserService {
         throw new NotFoundException('Usuário não encontrado');
       }
 
-      return {
-        message: 'Usuário recuperado com sucesso',
-        user,
-      };
+      return user;
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -212,6 +185,54 @@ export class UserService {
       }
       console.error('Remove User Error:', error);
       throw new InternalServerErrorException('Erro ao remover usuário');
+    }
+  }
+
+  async uploadPicture(
+    file: Express.Multer.File,
+    tokenPayload: TokenPayloadDto,
+  ) {
+    try {
+      const user = await this.findOneById(tokenPayload.sub);
+
+      const fileExtension = path.extname(file.originalname).toLowerCase();
+      const fileName = `${tokenPayload.sub}-${Date.now()}${fileExtension}`;
+      const fileFullPath = path.join(process.cwd(), 'pictures/user', fileName);
+
+      if (user.picture) {
+        try {
+          const oldPicturePath = path.join(
+            process.cwd(),
+            'pictures/user',
+            user.picture,
+          );
+          await fs.unlink(oldPicturePath);
+        } catch (error) {
+          console.error('Error deleting old picture:', error);
+        }
+      }
+
+      await fs.writeFile(fileFullPath, file.buffer);
+
+      const updatedUser = await this.prisma.user.update({
+        where: { id: tokenPayload.sub },
+        data: {
+          picture: fileName,
+        },
+        select: {
+          picture: true,
+        },
+      });
+
+      return {
+        message: 'Foto atualizada com sucesso',
+        user: updatedUser,
+      };
+    } catch (error) {
+      console.error('Error uploading picture:', error);
+      throw new InternalServerErrorException(
+        'Ocorreu um erro ao processar o upload da imagem',
+      );
     }
   }
 }

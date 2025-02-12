@@ -10,6 +10,9 @@ import { winstonConfig } from 'src/common/config/winston.config';
 
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { UserLoggingInterceptor } from 'src/interceptors/userLogging.interceptor';
+import { ServeStaticModule } from '@nestjs/serve-static';
+
+import * as path from 'path';
 
 @Module({
   imports: [
@@ -18,6 +21,16 @@ import { UserLoggingInterceptor } from 'src/interceptors/userLogging.interceptor
     CartModule,
     OrderModule,
     WinstonModule.forRoot(winstonConfig),
+    ServeStaticModule.forRoot(
+      {
+        rootPath: path.resolve(__dirname, '..', '..', 'pictures/user'),
+        serveRoot: '/pictures/user',
+      },
+      {
+        rootPath: path.resolve(__dirname, '..', '..', 'pictures/products'),
+        serveRoot: '/pictures/products',
+      },
+    ),
   ],
   controllers: [AppController],
   providers: [

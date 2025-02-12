@@ -7,6 +7,10 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipeBuilder,
+  HttpStatus,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, CreateUserSchema } from './dto/create-user.dto';
@@ -20,6 +24,7 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { REQUEST_ADM } from 'src/auth/auth.constants';
 import { ApiCreatedResponse } from '@nestjs/swagger';
 import { User } from 'src/common/decorators/get-userId-from-token.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('user')
 export class UserController {
@@ -41,7 +46,7 @@ export class UserController {
   @Get('/get-one')
   @UseGuards(AuthTokenGuard)
   findOne(@User('sub') userId: string) {
-    return this.userService.findOneByToken(userId);
+    return this.userService.findOneById(userId);
   }
 
   @Patch(':id')
@@ -60,5 +65,27 @@ export class UserController {
   @Roles(REQUEST_ADM)
   remove(@Param('id') id: string) {
     return this.userService.remove(id);
+  }
+
+  @UseGuards(AuthTokenGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  @Post('upload-picture')
+  async uploadPicture(
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /jpeg|jpg|png/g,
+        })
+        .addMaxSizeValidator({
+          maxSize: 100 * (1024 * 1024),
+        })
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    picture: Express.Multer.File,
+    @TokenPayloadParam() tokenPayload: TokenPayloadDto,
+  ) {
+    return this.userService.uploadPicture(picture, tokenPayload);
   }
 }
