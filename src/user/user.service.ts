@@ -32,6 +32,7 @@ export class UserService {
         username: createUserDto.username,
         email: createUserDto.email,
         passwordHash,
+        picture: 'default.jpg',
       };
 
       const newUser = await this.prisma.user.create({
