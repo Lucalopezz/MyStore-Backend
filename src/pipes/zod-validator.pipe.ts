@@ -9,7 +9,7 @@ export class ZodValidationPipe implements PipeTransform {
 
     if (!result.success) {
       const errorMessages = result.error.issues.map((e) => {
-        return `${e.path.join('.')} is ${e.message.toLowerCase()}`;
+        return `${e.message}`;
       });
 
       throw new BadRequestException({
