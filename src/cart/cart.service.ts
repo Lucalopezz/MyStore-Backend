@@ -39,10 +39,7 @@ export class CartService {
         });
       }
 
-      return {
-        message: 'Carrinho recuperado com sucesso',
-        cart,
-      };
+      return cart;
     } catch (error) {
       console.error('Get Cart Error:', error);
       throw new ServiceUnavailableException(
