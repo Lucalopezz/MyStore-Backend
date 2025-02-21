@@ -14,14 +14,14 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
+  id           String   @id @default(uuid())
+  email        String   @unique
   passwordHash String
   username     String
-  role         Role      @default(USER)  
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  active       Boolean   @default(true)
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  active       Boolean  @default(true)
   picture      String?
   orders       Order[]
   carts        Cart[]
@@ -49,20 +49,20 @@ model Cart {
   id        Int           @id @default(autoincrement())
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
-  userId    String        @unique 
-  user      User         @relation(fields: [userId], references: [id])
+  userId    String        @unique
+  user      User          @relation(fields: [userId], references: [id])
   products  CartProduct[]
 
   @@index([userId])
 }
 
 model CartProduct {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   quantity  Int
   cartId    Int
   productId Int
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id])
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
 
   @@unique([cartId, productId])
   @@index([productId])
@@ -73,21 +73,22 @@ model Order {
   id        Int            @id @default(autoincrement())
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
-  status    String        @default("processando")
+  status    String         @default("processando")
   userId    String
-  user      User          @relation(fields: [userId], references: [id])
+  user      User           @relation(fields: [userId], references: [id])
   products  ProductOrder[]
 
   @@index([userId])
 }
 
 model ProductOrder {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
+  price     Decimal @db.Decimal(10, 2) @default(0.0)
   quantity  Int
   orderId   Int
   productId Int
-  order     Order    @relation(fields: [orderId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
 
   @@unique([orderId, productId])
   @@index([productId])

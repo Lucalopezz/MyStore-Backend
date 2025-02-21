@@ -60,6 +60,7 @@ export class OrderService {
               create: cart.products.map((cp) => ({
                 productId: cp.productId,
                 quantity: cp.quantity,
+                price: cp.product.price,
               })),
             },
           },
