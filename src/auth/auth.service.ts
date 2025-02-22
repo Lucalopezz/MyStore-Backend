@@ -41,8 +41,10 @@ export class AuthService {
 
     return {
       accessToken,
+      role: user.role,
     };
   }
+
   async login(loginDto: LoginDto) {
     let passwordIsValid = false;
     let throwError = true;
