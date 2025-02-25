@@ -13,6 +13,8 @@ import { UserLoggingInterceptor } from 'src/interceptors/userLogging.interceptor
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 import * as path from 'path';
+import { PaymentsController } from 'src/payment/payments.controller';
+import { StripeService } from 'src/payment/stripe.service';
 
 @Module({
   imports: [
@@ -32,8 +34,9 @@ import * as path from 'path';
       },
     ),
   ],
-  controllers: [AppController],
+  controllers: [AppController, PaymentsController],
   providers: [
+    StripeService,
     AppService,
     {
       provide: APP_INTERCEPTOR,
