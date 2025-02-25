@@ -32,24 +32,13 @@ export class StripeService {
         },
       ],
       mode: 'payment',
-      success_url: `${this.configService.get('FRONTEND_URL')}/orders?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${this.configService.get('FRONTEND_URL')}/orders?canceled=true`,
+      success_url: `${this.configService.get('FRONTEND_URL')}/payment-success?cartId=${data.id}`,
+      cancel_url: `${this.configService.get('FRONTEND_URL')}/cart`,
     });
 
     return {
       sessionUrl: session.url,
       sessionId: session.id,
-    };
-  }
-
-  async verifyPaymentSession(sessionId: string) {
-    const session = await this.stripe.checkout.sessions.retrieve(sessionId);
-
-    return {
-      status: session.payment_status === 'paid' ? 'complete' : session.status,
-      customer: session.customer,
-      amount: session.amount_total,
-      currency: session.currency,
     };
   }
 }
