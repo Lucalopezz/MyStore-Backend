@@ -1,86 +1,73 @@
-# API Loja NestJS
+# API Store NestJS
+This application is a RESTful API developed with **NestJS**, using **PostgreSQL** as the database and **Prisma** as the ORM. The API includes JWT authentication, role-based permission control (user and admin), a logging system (Winston), and interactive documentation via Swagger.
 
-Esta aplicação é uma API RESTful desenvolvida com **NestJS**, utilizando **PostgreSQL** como banco de dados e **Prisma** como ORM. A API conta com autenticação JWT, controle de permissões por roles (usuário e admin), sistema de logs (Winston) e documentação interativa via Swagger.
+## Features
+- **User CRUD**:
+  - Each user has a role (`USER` or `ADMIN`).
+  - Only an `ADMIN` can delete users and create products.
+- **Product CRUD**:
+  - Any user can view products.
+  - Only users with the `ADMIN` role can create, update, or delete products.
+- **Authentication and Authorization**:
+  - Registration of new users.
+  - Login of existing users to obtain JWT token.
+  - Route protection based on user role.
+- **Payment System**:
+  - Creates a session with Stripe for payments.
+- **Logging System**:
+  - Activity and error logging using Winston.
+- **API Documentation**:
+  - Interactive documentation available via Swagger.
 
-## Funcionalidades
+## Technologies
+- **NestJS**, **PostgreSQL**, **Prisma**, **JWT**, **Winston**, **Zod**, **Swagger**, **Stripe**.
 
-- **CRUD de Usuários**:
-  - Cada usuário possui um papel (`USER` ou `ADMIN`).
-  - Apenas um `ADMIN` pode excluir usuários e criar produtos.
-- **CRUD de Produtos**:
-  - Qualquer usuário pode visualizar produtos.
-  - Apenas usuários com papel `ADMIN` podem criar, atualizar ou excluir produtos.
-- **Autenticação e Autorização**:
-  - Registro de novos usuários.
-  - Login de usuários existentes para obtenção de token JWT.
-  - Proteção de rotas com base no papel do usuário.
-- **Sistema de Logs**:
-  - Registro de atividades e erros utilizando o Winston.
-- **Documentação da API**:
-  - Documentação interativa disponível via Swagger.
-
-## Tecnologias
-
-- **NestJS**, **PostgreSQL**, **Prisma**, **JWT**, **Winston**, **Zod**, **Swagger**.
-
-## Instalação
-
-1. Clone o repositório:
+## Installation
+1. Clone the repository:
    ```bash
    git clone https://github.com/Lucalopezz/api-loja-nestjs.git
    cd api-loja-nestjs
    ```
-
-2. Instale as dependências:
+2. Install dependencies:
    ```bash
    npm install
    ```
-
-3. Configure o banco de dados:
-   - Crie um banco no PostgreSQL.
-   - Adicione no arquivo `.env`:
+3. Configure the database:
+   - Create a PostgreSQL database.
+   - Add to the `.env` file:
      ```
-     DATABASE_URL=postgresql://usuario:senha@localhost:5432/nome_do_banco
+     DATABASE_URL=postgresql://user:password@localhost:5432/database_name
      ```
-
-4. Rode as migrações:
+4. Run migrations:
    ```bash
    npx prisma migrate dev
    ```
-
-5. Inicie o servidor:
+5. Start the server:
    ```bash
    npm run start:dev
    ```
+The application will be available at `http://localhost:3000`.
 
-A aplicação estará disponível em `http://localhost:3000`.
-
-## Uso Básico
-
-- **Registro**: `POST /auth/register`
+## Basic Usage
+- **Registration**: `POST /auth/register`
   ```json
-  { "email": "usuario@example.com", "senha": "senha123", "nome": "Nome do Usuário" }
+  { "email": "user@example.com", "password": "password123", "name": "User Name" }
   ```
-
 - **Login**: `POST /auth/login`
   ```json
-  { "email": "usuario@example.com", "senha": "senha123" }
+  { "email": "user@example.com", "password": "password123" }
   ```
-
-  **Resposta**:
+  **Response**:
   ```json
-  { "access_token": "token_jwt" }
+  { "access_token": "jwt_token" }
   ```
+- **Swagger**: Access `http://localhost:3000/docs`.
 
-- **Swagger**: Acesse `http://localhost:3000/docs`.
-
-## Estrutura do Projeto
-
+## Project Structure
 - **src/**:
-  - **auth/**: Módulo de autenticação.
-  - **users/**: CRUD de usuários.
-  - **products/**: CRUD de produtos.
-  - **common/**: Guardas, interceptors e utils.
-  - **main.ts**: Entrada principal.
-
-
+  - **auth/**: Authentication module.
+  - **payment/**: Payment module with Stripe.
+  - **users/**: User CRUD.
+  - **products/**: Product CRUD.
+  - **common/**: Guards, interceptors, and utils.
+  - **main.ts**: Main entry point.
